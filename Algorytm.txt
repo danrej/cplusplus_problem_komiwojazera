@@ -1,0 +1,173 @@
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+int main ()
+{
+    cout << "*** ** ALGORYTM BRUTE-FORCE DLA PROBLEMU KOMIWOJAZERA ** ***\n"
+            "@Daniel Rejsz \n" << endl;
+    int ilosc_miast;
+    cout << "Podaj ilosc miast: ";
+    cin >> ilosc_miast;
+
+    cout << endl;
+    //stworzenie macierzy powiazan pomiedzy miastami
+    double ** odleglosci = new double * [ilosc_miast];
+
+    for (int i=0 ; i<ilosc_miast ; ++i)
+    {
+            odleglosci[i] = new double[ilosc_miast];
+    }
+
+
+    //przygotowanie, wyzerowanie tablicy
+    for (int i=0 ; i<ilosc_miast ; ++i)
+    {
+        for (int j=0 ; j<ilosc_miast ; ++j)
+        {
+            odleglosci[i][j] = 0.0;
+        }
+    }
+
+
+    //wypelnienie tablicy
+    for (int i=0 ; i<ilosc_miast-1 ; ++i)
+    {
+        cout << "Podaj odleglosci od pkt: " << i+1 << "\n";
+        for(int j=0 ; j<ilosc_miast ; ++j)
+        {
+            if (j != i && j>i )
+            {
+                cout << "do pkt " << j+1 << " ---> ";
+                cin >> odleglosci[i][j];
+                odleglosci[j][i] = odleglosci[i][j];
+            }
+            if (i == j)
+            {
+                odleglosci[i][j] = 0;
+            }
+        }
+        cout << endl;
+    }
+
+
+    //wyswietlenie macierzy powiazan pomiedzy miastami
+    cout << "Macierz odleglosci pomiedzy miastami: " << endl;
+    for (int i=0 ; i<ilosc_miast ; ++i)
+    {
+        for (int j=0 ; j<ilosc_miast ; ++j)
+        {
+            cout << odleglosci[i][j];
+        }
+        cout << "\n";
+    }
+    cout << endl;
+
+    //rozwiazanie problemu, stworzenie tablic
+    int * tablica_miast = new int[ilosc_miast-1];
+    int * tablica_pomocnicza = new int[ilosc_miast];
+    int * tablica_ostateczna = new int[ilosc_miast+1];
+    double wynik = 0.0;
+    double wynik_ostateczny = 10000000.0;
+    int y = 0;
+    int pomocnicza = 0;
+
+
+	//przygotowanie tablic do pracy
+    for (int i=0 ; i<ilosc_miast-1 ; ++i)
+    {
+        tablica_miast[i] = i+1;
+    }
+
+    for (int i=0 ; i<ilosc_miast-1 ; ++i)
+    {
+	   tablica_pomocnicza[i] = 0;
+    }
+
+    for (int i=0 ; i<=ilosc_miast ; ++i)
+    {
+	   tablica_ostateczna[i] = 1;
+    }
+
+
+//glowny algorytm uwzgledniajacy wszystkie mozliwe polaczenia
+    cout << "Wszystkie mozliwe trasy:\n";
+    do {
+        if (tablica_miast[0] == ilosc_miast-1) break;
+        cout << "Trasa: 1 ";
+        for (int i=0 ; i<ilosc_miast-1 ; ++i)
+        {
+            cout << tablica_miast[i]+1 << " ";
+            pomocnicza = tablica_miast[i];
+            wynik += odleglosci[y][pomocnicza];
+            tablica_pomocnicza[i] = pomocnicza+1;
+            y = pomocnicza;
+        }
+        cout << "1 " << endl;
+        wynik += odleglosci[y][0];  //dodanie odleglosci z ostatniego miasta do pierwszego
+        cout << "Wynik: " << wynik << "\n\n";
+        if (wynik < wynik_ostateczny)
+        {
+			wynik_ostateczny = wynik;
+			for (int i=0 ; i<ilosc_miast-1 ; ++i)
+			{
+                tablica_ostateczna[i+1] = tablica_pomocnicza[i];
+			}
+		}
+        wynik = 0;
+        y = 0;
+    } while ( next_permutation(tablica_miast, tablica_miast+ilosc_miast-1) );
+
+
+    //wyswietlenie wyniku
+    cout << "Najkrotsza trasa wynosi: "
+         << wynik_ostateczny << " \nWiedzie ona poprzez punkty: \n";
+    for (int i=0 ; i<=ilosc_miast ; ++i)
+    {
+        cout << tablica_ostateczna[i] << " ";
+    }
+    cout << "\n\n";
+
+
+    // zwolnienie pamieci
+    for (int i=0 ; i<ilosc_miast ; ++i)
+    {
+            delete [] odleglosci[i];
+    }
+    delete [] tablica_miast;
+    delete [] tablica_pomocnicza;
+    delete [] tablica_ostateczna;
+
+
+    system ("Pause");
+    return EXIT_SUCCESS;
+}
+/*
+  A  B  C D
+A X 01 02 03
+B 10 X 12 13
+C 20 21 X 23
+D 30 31 32 X
+
+A B C D A               [0][1] + [1][2] + [2][3] + [3][0]  *
+A B D C A               [0][1] + [1][3] + [3][2] + [2][0]  -
+A C B D A               [0][2] + [2][1] + [1][3] + [3][0]  #
+A C D B A               [0][2] + [2][3] + [3][1] + [1][0]  -
+A D B C A               [0][3] + [3][1] + [1][2] + [2][0]  #
+A D C B A               [0][3] + [3][2] + [2][1] + [1][0]  *
+
+
+A B C D E A      [0][1] + [1][2] + [2][3] + [3][4] + [4][0]
+A B C E D A      [0][1] + [1][2] + [2][4] + [4][3] + [3][0]
+A B D C E A      [0][1] + [1][3] + [3][2] + [2][4] + [4][0]
+A B D E C A      [0][1] + [1][3] + [3][4] + [4][2] + [2][0]
+A B E D C A      [0][1] + [1][4] + [4][3] + [3][2] + [2][0]
+A B E C D A      [0][1] + [1][4] + [4][2] + [2][3] + [3][0]
+A C B D E A      [0][2] + [2][1] + [1][3] + [3][4] + [4][0]
+A C B E D A      [0][2] + [2][1] + [1][4] + [4][3] + [3][0]
+A C E B D A      [0][2] + [2][4] + [4][1] + [1][3] + [3][0]
+A C D B E A      [0][2] + [2][3] + [3][1] + [1][4] + [4][0]
+A D B C E A      [0][3] + [3][1] + [1][2] + [2][4] + [4][0]
+A D C B E A      [0][3] + [3][2] + [2][1] + [1][4] + [4][0]
+*/
